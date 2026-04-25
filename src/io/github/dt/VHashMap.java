@@ -9,7 +9,7 @@ import io.github.dt.VHashMap.Node.Collision;
 /// An attempt to port the persistent hashmap from lean4 (the original lean code can be found in
 /// the `docs/` directory for reference)
 ///
-/// Most core operations are present at the moment -- aside from delete (todo).
+/// Most core operations are present. Removal currently rebuilds the map, so it is `O(n)`.
 public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
 
   private static final VHashMap<?, ?> Empty =
@@ -281,7 +281,9 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     };
   }
 
-  /// O(1) - inserts a new `(k, v)` pair into this hashmap.
+  /// O(1) average case - inserts a new `(k, v)` pair into this hashmap.
+  ///
+  /// Keys are expected to be non-null.
   public VHashMap<K, V> insert(K k, V v) {
     var updatedRoot = insertAux(root, k.hashCode(), 1, k, v);
     var isNodeAdded = updatedRoot.second();
@@ -326,12 +328,12 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     };
   }
 
-  /// O(1) - returns the value associated with key `k`.
+  /// O(1) average case - returns the value associated with key `k`.
   public Maybe<V> lookup(K k) {
     return findAux(root, k.hashCode(), k);
   }
 
-  /// O(1) - returns the value associated with key `k`;
+  /// O(1) average case - returns the value associated with key `k`;
   ///
   ///  Requires `k` to exist in this map's key set.
   ///
@@ -343,8 +345,8 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     };
   }
 
-  /// O(1) - returns the value associated with key `k` or `defaultVal` if the key `k` is not
-  /// present.
+  /// O(1) average case - returns the value associated with key `k` or `defaultVal` if the key `k`
+  /// is not present.
   public V lookupOrElse(K k, V defaultVal) {
     return switch (findAux(root, k.hashCode(), k)) {
       case Maybe.Some(var x) -> x;
@@ -380,7 +382,7 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     };
   }
 
-  /// O(1) -- returns the key-value pair for `k` in this map; nothing otherwise.
+  /// O(1) average case - returns the key-value pair for `k` in this map; nothing otherwise.
   public Maybe<Pair<K, V>> lookupMapEntry(K k) {
     return findMapEntryAux(root, k.hashCode(), k);
   }
@@ -411,7 +413,7 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     };
   }
 
-  /// O(1) - returns true only if `k` exists the keyset of this map.
+  /// O(1) average case - returns true only if `k` exists the keyset of this map.
   public boolean contains(K k) {
     return containsAux(root, k.hashCode(), k);
   }
@@ -510,6 +512,7 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     return res;
   }
 
+  /// O(n) - returns the set of keys present in this map.
   public VHashSet<K> keySet() {
     var result = VHashSet.<K>empty();
     for (var kv : this) {
@@ -518,6 +521,7 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     return result;
   }
 
+  /// O(n) - returns the entries of this map as a list.
   public VList<Pair<K, V>> toList() {
     return foldLeftAux((acc, k, v) -> VList.cons(Pair.of(k, v), acc), VList.empty(), this.root);
   }

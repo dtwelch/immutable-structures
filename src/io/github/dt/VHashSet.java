@@ -61,7 +61,7 @@ public final class VHashSet<T> implements Iterable<T> {
     return result;
   }
 
-  /// O(1) - adds `item` to this hashset.
+  /// O(1) average case - adds `item` to this hashset.
   public VHashSet<T> insert(T item) {
     var updatedMap = hashMap.insert(item, Unit.Instance);
     return new VHashSet<>(updatedMap);
@@ -114,7 +114,7 @@ public final class VHashSet<T> implements Iterable<T> {
     return result;
   }
 
-  /// O(1) - returns true only if this hashset contains `item`; false otherwise.
+  /// O(1) average case - returns true only if this hashset contains `item`; false otherwise.
   public boolean contains(T item) {
     return switch (hashMap.lookup(item)) {
       case Maybe.Some(_) -> true;
@@ -154,6 +154,7 @@ public final class VHashSet<T> implements Iterable<T> {
     return true;
   }
 
+  /// O(n) - returns the entries of this set as a list.
   public VList<T> toList() {
     return hashMap.foldLeft((acc, k, v) -> VList.cons(k, acc), VList.empty());
   }

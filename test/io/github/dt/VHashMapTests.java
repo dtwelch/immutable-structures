@@ -178,6 +178,32 @@ public final class VHashMapTests {
   }
 
   @Test
+  void lookupUnsafe01() {
+    var m = VHashMap.<String, Integer>empty().insert("p", 7);
+    Assertions.assertEquals(7, m.lookupUnsafe("p"));
+  }
+
+  @Test
+  void lookupUnsafe02() {
+    var m = VHashMap.<String, Integer>empty();
+    Assertions.assertThrows(IllegalArgumentException.class, () -> m.lookupUnsafe("missing"));
+  }
+
+  @Test
+  void lookupOrElse01() {
+    var m = VHashMap.<String, Integer>empty().insert("p", 7);
+    Assertions.assertEquals(7, m.lookupOrElse("p", 99));
+    Assertions.assertEquals(99, m.lookupOrElse("missing", 99));
+  }
+
+  @Test
+  void lookupMapEntry01() {
+    var m = VHashMap.<String, Integer>empty().insert("p", 7);
+    Assertions.assertEquals(Maybe.of(Pair.of("p", 7)), m.lookupMapEntry("p"));
+    Assertions.assertEquals(Maybe.none(), m.lookupMapEntry("missing"));
+  }
+
+  @Test
   void remove01() {
     var m = VHashMap.<String, Integer>empty().insert("a", 1).insert("b", 2).insert("c", 3);
 
@@ -195,6 +221,21 @@ public final class VHashMapTests {
     var m = VHashMap.<String, Integer>empty().insert("a", 1);
 
     Assertions.assertSame(m, m.remove("missing"));
+  }
+
+  @Test
+  void remove03() {
+    var k1 = new BadHash("x");
+    var k2 = new BadHash("y");
+    var k3 = new BadHash("z");
+    var m = VHashMap.<BadHash, Integer>empty().insert(k1, 1).insert(k2, 2).insert(k3, 3);
+
+    var removed = m.remove(k2);
+
+    Assertions.assertEquals(Maybe.of(1), removed.lookup(k1));
+    Assertions.assertEquals(Maybe.none(), removed.lookup(k2));
+    Assertions.assertEquals(Maybe.of(3), removed.lookup(k3));
+    Assertions.assertEquals(2, removed.size());
   }
 
   @Test
@@ -307,6 +348,18 @@ public final class VHashMapTests {
     var res = m.filterFor((_, v) -> v != null);
     var expected = VHashMap.<String, String>empty().insert("nonnull", "x");
     Assertions.assertEquals(expected, res);
+  }
+
+  @Test
+  void keySet01() {
+    var m = VHashMap.<String, Integer>empty().insert("a", 1).insert("b", 2).insert("c", 3);
+
+    var keys = m.keySet();
+
+    Assertions.assertEquals(3, keys.size());
+    Assertions.assertTrue(keys.contains("a"));
+    Assertions.assertTrue(keys.contains("b"));
+    Assertions.assertTrue(keys.contains("c"));
   }
 
   @Test
