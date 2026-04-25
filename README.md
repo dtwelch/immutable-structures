@@ -1,6 +1,6 @@
 # immutable-structures
 
-Persistent immutable data structures for recent JDKs.
+Persistent immutable data structures for recent JDKs (25+).
 
 The current surface area is intentionally small: a list, a hash map, a hash set,
 and a few support types built around them.
