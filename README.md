@@ -28,14 +28,14 @@ and a few support types built around them.
 
 ## auxiliary (potentially useful) types:
 
-`Maybe`, `Result`, `Validation`, `Pair`, `Unit`, `Utils`, and the small function interfaces
+`Maybe`, `Result`, `Validation`, `Pair`, `Unit`, and the small function interfaces
 support the core collections.
 
 ## Notes
 
 - The published Maven coordinates are currently `io.github.dtwelch:immutable-structures`.
 - `VHashMap` expects non-null keys (see doc/ for the original lean4 implementation).
-
+- most of the auxiliary (collection) types allow pattern matching as does `VList`
 ## License
 
 BSD 3-Clause. See [LICENSE](LICENSE).
