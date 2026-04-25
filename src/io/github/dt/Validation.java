@@ -4,18 +4,12 @@ import java.util.ArrayList;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-/// Validation represents either a successful result or a failure. The [Success] type
-/// wraps a successfully
-/// computed value of type `T`; a [Failure] encapsulates a list of failures of type `E`.
+/// A validation that is either [Success] or [Failure].
 ///
-/// Functions similar to the 'Either' datatype in scala or haskell -- where the left constructor's
-/// contents are semigroup-like (can be concatenated/accumulated).
+/// Unlike a plain either/result type, failures accumulate a list of errors of type `E`.
 ///
 /// @param <T> the type of some successfully computed result.
 /// @param <E> the type of errors that are accumulated.
-///
-/// NOTE: this + associated tests is a near direct port of the github.com/flix
-/// compiler Validation type
 public sealed interface Validation<T, E> {
   record Success<T, E>(T t) implements Validation<T, E> {
     @Override
@@ -26,7 +20,7 @@ public sealed interface Validation<T, E> {
 
   record Failure<T, E>(VList<E> errors) implements Validation<T, E> {}
 
-  /// Returns as an [Result.Ok] only if there are no errors; returns [Result.Err] otherwise.
+  /// O(1) - converts this validation to a [Result].
   default Result<T, VList<E>> toResult() {
     return switch (this) {
       case Validation.Success(var t) -> Result.ok(t);
@@ -63,7 +57,7 @@ public sealed interface Validation<T, E> {
     return new Validation.Success<>(value);
   }
 
-  /// Creates an [Validation.Failure] that contains the given `error`.
+  /// O(1) - creates a [Failure] containing the single given `error`.
   static <T, E> Validation<T, E> fail(E error) {
     return Validation.fail(VList.of(error));
   }
@@ -72,7 +66,7 @@ public sealed interface Validation<T, E> {
     return new Validation.Failure<>(errors);
   }
 
-  /// Sequences the given list of validations `xs`.
+  /// O(n + accumulated-error-size) - sequences `xs`, accumulating any failures.
   static <T, E> Validation<VList<T>, E> sequence(Iterable<Validation<T, E>> xs) {
     var acc = Validation.<T, E>successNil();
     for (var x : xs) {
@@ -89,7 +83,7 @@ public sealed interface Validation<T, E> {
     return acc;
   }
 
-  /// Traverses `xs` applying the function `f` to each element.
+  /// O(n + accumulated-error-size + cost(f)) - traverses `xs`, accumulating any failures.
   static <T, S, E> Validation<VList<S>, E> traverse(
       Iterable<T> xs, Function<T, Validation<S, E>> f) {
     return fastTraverse(xs, f);
@@ -152,7 +146,7 @@ public sealed interface Validation<T, E> {
     }
   }
 
-  /// Returns the validation inside `t1`; preserves all errors.
+  /// O(1) - flattens a nested validation while preserving any accumulated errors.
   private static <U, E> Validation<U, E> flatten(Validation<Validation<U, E>, E> t1) {
     return switch (t1) {
       case Success(Success(var t)) -> Validation.success((U) t);
@@ -161,7 +155,7 @@ public sealed interface Validation<T, E> {
     };
   }
 
-  /// Applies function `f` to the val inside `t`.
+  /// O(1 + combined-error-size) - applies a validated function to a validated value.
   private static <T1, U, E> Validation<U, E> ap(
       Validation<Function<T1, U>, E> f, Validation<T1, E> t1) {
     return switch (Pair.of(f, t1)) {
@@ -172,35 +166,35 @@ public sealed interface Validation<T, E> {
     };
   }
 
-  /// Returns `f` with the last parameter curried.
+  /// O(1) - curries `f`.
   static <T1, T2, T3> Function<T1, Function<T2, T3>> curry(BiFunction<T1, T2, T3> f) {
     return (T1 t1) -> (T2 t2) -> f.apply(t1, t2);
   }
 
-  /// Returns `f` with the last parameter curried.
+  /// O(1) - curries `f`.
   static <T1, T2, T3, T4> BiFunction<T1, T2, Function<T3, T4>> curry(Function3<T1, T2, T3, T4> f) {
     return (T1 t1, T2 t2) -> (T3 t3) -> f.apply(t1, t2, t3);
   }
 
-  /// Returns `f` with the last parameter curried.
+  /// O(1) - curries `f`.
   static <T1, T2, T3, T4, T5> Function3<T1, T2, T3, Function<T4, T5>> curry(
       Function4<T1, T2, T3, T4, T5> f) {
     return (T1 t1, T2 t2, T3 t3) -> (T4 t4) -> f.apply(t1, t2, t3, t4);
   }
 
-  /// Returns `f` with the last parameter curried.
+  /// O(1) - curries `f`.
   static <T1, T2, T3, T4, T5, T6> Function4<T1, T2, T3, T4, Function<T5, T6>> curry(
       Function5<T1, T2, T3, T4, T5, T6> f) {
     return (T1 t1, T2 t2, T3 t3, T4 t4) -> (T5 t5) -> f.apply(t1, t2, t3, t4, t5);
   }
 
-  /// Returns `f` with the last parameter curried.
+  /// O(1) - curries `f`.
   static <T1, T2, T3, T4, T5, T6, T7> Function5<T1, T2, T3, T4, T5, Function<T6, T7>> curry(
       Function6<T1, T2, T3, T4, T5, T6, T7> f) {
     return (T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) -> (T6 t6) -> f.apply(t1, t2, t3, t4, t5, t6);
   }
 
-  /// Maps over `t1`.
+  /// O(1 + cost(f)) - maps `f` over `t1`.
   static <T1, U, E> Validation<U, E> mapN(Validation<T1, E> t1, Function<T1, U> f) {
     return switch (t1) {
       case Success(var v1) -> success(f.apply(v1));
@@ -208,13 +202,13 @@ public sealed interface Validation<T, E> {
     };
   }
 
-  /// Maps over `t1` and `t2`.
+  /// O(1 + combined-error-size + cost(f)) - maps `f` over `t1` and `t2`.
   static <T1, T2, U, E> Validation<U, E> mapN(
       Validation<T1, E> t1, Validation<T2, E> t2, BiFunction<T1, T2, U> f) {
     return ap(mapN(t1, curry(f)), t2);
   }
 
-  /// Maps over `t1`, `t2`, and `t3`.
+  /// O(1 + combined-error-size + cost(f)) - maps `f` over `t1`, `t2`, and `t3`.
   static <T1, T2, T3, U, E> Validation<U, E> mapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -223,7 +217,7 @@ public sealed interface Validation<T, E> {
     return ap(mapN(t1, t2, curry(f)), t3);
   }
 
-  /// Maps over `t1`, `t2`, `t3`, and `t4`.
+  /// O(1 + combined-error-size + cost(f)) - maps `f` over `t1`, `t2`, `t3`, and `t4`.
   static <T1, T2, T3, T4, U, E> Validation<U, E> mapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -233,7 +227,7 @@ public sealed interface Validation<T, E> {
     return ap(mapN(t1, t2, t3, curry(f)), t4);
   }
 
-  /// Maps over `t1`, `t2`, `t3`, `t4`, and `t5`.
+  /// O(1 + combined-error-size + cost(f)) - maps `f` over `t1`, `t2`, `t3`, `t4`, and `t5`.
   static <T1, T2, T3, T4, T5, U, E> Validation<U, E> mapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -244,7 +238,7 @@ public sealed interface Validation<T, E> {
     return ap(mapN(t1, t2, t3, t4, curry(f)), t5);
   }
 
-  /// Maps over `t1`, `t2`, `t3`, `t4`, `t5`, and `t6`.
+  /// O(1 + combined-error-size + cost(f)) - maps `f` over `t1`, `t2`, `t3`, `t4`, `t5`, and `t6`.
   static <T1, T2, T3, T4, T5, T6, U, E> Validation<U, E> mapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -256,7 +250,7 @@ public sealed interface Validation<T, E> {
     return ap(mapN(t1, t2, t3, t4, t5, curry(f)), t6);
   }
 
-  /// Flatmaps over `t1`.
+  /// O(1 + cost(f)) - flatmaps `f` over `t1`.
   static <T1, U, E> Validation<U, E> flatMapN(
       Validation<T1, E> t1, Function<T1, Validation<U, E>> f) {
     return switch (t1) {
@@ -265,13 +259,13 @@ public sealed interface Validation<T, E> {
     };
   }
 
-  /// Flatmaps over t1 and `t2`.
+  /// O(1 + combined-error-size + cost(f)) - flatmaps `f` over `t1` and `t2`.
   static <T1, T2, U, E> Validation<U, E> flatMapN(
       Validation<T1, E> t1, Validation<T2, E> t2, BiFunction<T1, T2, Validation<U, E>> f) {
     return flatten(ap(mapN(t1, curry(f)), t2));
   }
 
-  /// Flatmaps over `t1`, `t2`, and `t3`.
+  /// O(1 + combined-error-size + cost(f)) - flatmaps `f` over `t1`, `t2`, and `t3`.
   static <T1, T2, T3, U, E> Validation<U, E> flatMapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -280,7 +274,7 @@ public sealed interface Validation<T, E> {
     return flatten(ap(mapN(t1, t2, curry(f)), t3));
   }
 
-  /// Flatmaps over `t1`, `t2`, `t3`, and `t4`.
+  /// O(1 + combined-error-size + cost(f)) - flatmaps `f` over `t1`, `t2`, `t3`, and `t4`.
   static <T1, T2, T3, T4, U, E> Validation<U, E> flatMapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -290,7 +284,7 @@ public sealed interface Validation<T, E> {
     return flatten(ap(mapN(t1, t2, t3, curry(f)), t4));
   }
 
-  /// Flatmaps over `t1`, `t2`, `t3`, `t4`, and `t5`.
+  /// O(1 + combined-error-size + cost(f)) - flatmaps `f` over `t1`, `t2`, `t3`, `t4`, and `t5`.
   static <T1, T2, T3, T4, T5, U, E> Validation<U, E> flatMapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -301,7 +295,7 @@ public sealed interface Validation<T, E> {
     return flatten(ap(mapN(t1, t2, t3, t4, curry(f)), t5));
   }
 
-  /// Flatmaps over `t1`, `t2`, `t3`, `t4`, `t5`, and `t6`.
+  /// O(1 + combined-error-size + cost(f)) - flatmaps `f` over `t1`, `t2`, `t3`, `t4`, `t5`, and `t6`.
   static <T1, T2, T3, T4, T5, T6, U, E> Validation<U, E> flatMapN(
       Validation<T1, E> t1,
       Validation<T2, E> t2,
@@ -313,6 +307,7 @@ public sealed interface Validation<T, E> {
     return flatten(ap(mapN(t1, t2, t3, t4, t5, curry(f)), t6));
   }
 
+  /// O(n + cost(f)) - folds `xs` from left to right through a validating step function.
   public static <In, Out, E> Validation<Out, E> fold(
       Iterable<In> xs, Out zero, java.util.function.BiFunction<Out, In, Validation<Out, E>> f) {
     var acc = Validation.<Out, E>success(zero);

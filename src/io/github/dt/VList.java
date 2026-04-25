@@ -5,7 +5,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-/// An immutable linked list type amenable to pattern matching.
+/// An immutable linked-list type.
 ///
 /// Most core list operations are present. Call [#of(Object...)] to construct a nonempty list and
 /// [#empty()] to obtain a ref. to the empty list.
@@ -72,8 +72,9 @@ public sealed interface VList<A> extends Iterable<A> {
     return this instanceof Empty<A>;
   }
 
-  /// O(1) - returns the head of this list; throws an [IllegalStateException] if called on an empty
-  // list.
+  /// O(1) - returns the head of this list.
+  ///
+  /// @throws IllegalArgumentException if called on an empty list.
   default A head() {
     return switch (this) {
       case Cons(var head, _) -> head;
@@ -81,7 +82,7 @@ public sealed interface VList<A> extends Iterable<A> {
     };
   }
 
-  /// O(n) - returns the last element in this list
+  /// O(n) - returns the last element in this list.
   ///
   /// @throws IllegalArgumentException if called on an empty list
   default A last() {
@@ -223,7 +224,7 @@ public sealed interface VList<A> extends Iterable<A> {
     return lst;
   }
 
-  /// O(n) -- returns a list containing all elements of `prefix` followed by
+  /// O(n) - returns a list containing all elements of `prefix` followed by
   /// all elements of `this` (i.e. `prefix ++ this`); preserves the relative
   /// order of both lists and is stack safe.
   default VList<A> prependAll(VList<A> prefix) {
@@ -333,8 +334,7 @@ public sealed interface VList<A> extends Iterable<A> {
     return false;
   }
 
-  /// Returns the first item in `this` list that satisfies the predicate `p` wrapped in a
-  /// [Maybe.Some]; returns [Maybe.None] if no such entry exists.
+  /// O(n) - returns the first item in this list that satisfies `p`, if any.
   default Maybe<A> find(Predicate<A> p) {
     for (var item : this) {
       if (p.test(item)) {
@@ -356,9 +356,7 @@ public sealed interface VList<A> extends Iterable<A> {
     return Maybe.none();
   }
 
-  /// O(n) - walk the list; apply f; as soon as f returns [Maybe.Some], stop
-  /// and returns that entry wrapped in a [Maybe.Some]; returns [Maybe.None] in
-  /// all other cases.
+  /// O(n) - applies `f` from left to right and returns the first nonempty result, if any.
   default <U> Maybe<U> findMap(Function<A, Maybe<U>> f) {
     for (var x : this) {
       var r = f.apply(x);

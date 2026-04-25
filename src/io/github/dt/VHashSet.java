@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-/// An immutable hashset.
+/// An immutable hash set.
 ///
 /// Offers standard operations for querying, adding, filtering, etc. As usual, obtain an instance
 /// via the factory methods (i.e.: [VHashSet#of(Object)] or [VHashSet#empty()]).
@@ -75,8 +75,7 @@ public final class VHashSet<T> implements Iterable<T> {
     return new VHashSet<>(hashMap.remove(item));
   }
 
-  /// O(n) - returns true only if there exists some item in this set that satisfies predicate `p`;
-  // false otherwise.
+  /// O(n) - returns true only if some item in this set satisfies `p`.
   public boolean exists(Predicate<T> p) {
     for (var kv : this.hashMap) {
       switch (kv) {
@@ -89,7 +88,7 @@ public final class VHashSet<T> implements Iterable<T> {
     return false;
   }
 
-  /// O(n) - returns true only all elements of this set satisfy predicate `p`; false otherwise
+  /// O(n) - returns true only if all elements of this set satisfy `p`.
   public boolean forall(Predicate<T> p) {
     return !exists(t -> !p.test(t));
   }
@@ -144,7 +143,7 @@ public final class VHashSet<T> implements Iterable<T> {
     return result;
   }
 
-  /// O(n) -- returns true only if all the entries of this are in `other`; false otherwise.
+  /// O(n) - returns true only if every element of this set is also in `other`.
   public boolean subsetOf(VHashSet<T> other) {
     for (var entry : this) {
       if (!other.contains(entry)) {

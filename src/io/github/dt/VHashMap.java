@@ -6,10 +6,10 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import io.github.dt.VHashMap.Node.Collision;
 
-/// An attempt to port the persistent hashmap from lean4 (the original lean code can be found in
-/// the `docs/` directory for reference)
+/// An immutable hash map based on a hash array mapped trie.
 ///
-/// Most core operations are present. Removal currently rebuilds the map, so it is `O(n)`.
+/// This implementation is based in part on Lean 4's persistent hash map. Removal currently
+/// rebuilds the map, so it is `O(n)`.
 public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
 
   private static final VHashMap<?, ?> Empty =
@@ -291,8 +291,8 @@ public final class VHashMap<K, V> implements Iterable<Pair<K, V>> {
     return new VHashMap<>(updatedRoot.first(), updatedSize);
   }
 
-  /// O(n) - returns this hashset combined with the `other` hashset; prefers items from `other`
-  /// hashmap.
+  /// O(n) - returns the union of this map and `other`, preferring values from `other` on key
+  /// collisions.
   public VHashMap<K, V> union(VHashMap<K, V> other) {
     var result = this;
     for (var kv : other) {

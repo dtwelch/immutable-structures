@@ -3,7 +3,7 @@ package io.github.dt;
 import java.util.ArrayList;
 import java.util.function.Function;
 
-/// A result either holds a value (i.e. is an instance of [Ok]) or an error (an instance of [Err]).
+/// A result that is either [Ok] or [Err].
 ///
 /// @param <T> the type of the value.
 /// @param <E> the type of the error.
@@ -20,7 +20,9 @@ public sealed interface Result<T, E> {
     return new Err<>(e);
   }
 
-  // precondition: this is an instance of {@link Result.Err}.
+  /// O(1) - returns the wrapped error value.
+  ///
+  /// @throws IllegalArgumentException if this is [Ok].
   default E getError() {
     return switch (this) {
       case Ok(_) -> throw new IllegalArgumentException("getError() called on non error instance");
@@ -28,9 +30,9 @@ public sealed interface Result<T, E> {
     };
   }
 
-  /// Returns the success value stored (assuming, as a precondition, this is an instance of [Ok]).
+  /// O(1) - returns the wrapped success value.
   ///
-  /// @throws IllegalArgumentException if this isn't a success instance.
+  /// @throws IllegalArgumentException if this is [Err].
   default T get() {
     return switch (this) {
       case Ok(var v) -> v;
@@ -38,14 +40,17 @@ public sealed interface Result<T, E> {
     };
   }
 
+  /// O(1) - returns true only if this result is [Ok].
   default boolean isOk() {
     return this instanceof Result.Ok<T, E>;
   }
 
+  /// O(1) - returns true only if this result is [Err].
   default boolean isError() {
     return this instanceof Result.Err<T, E>;
   }
 
+  /// O(1) - maps `f` over the wrapped success value if present.
   default <U> Result<U, E> map(Function<T, U> f) {
     return switch (this) {
       case Ok(var t) -> ok(f.apply(t));
@@ -53,6 +58,7 @@ public sealed interface Result<T, E> {
     };
   }
 
+  /// O(1) - flatmaps `f` over the wrapped success value if present.
   default <B> Result<B, E> flatMap(Function<T, Result<B, E>> f) {
     return switch (this) {
       case Ok(var t) -> f.apply(t);
@@ -60,6 +66,7 @@ public sealed interface Result<T, E> {
     };
   }
 
+  /// O(1) - converts this result to a [Maybe], discarding any error value.
   default Maybe<T> toMaybe() {
     return switch (this) {
       case Ok(var t) -> Maybe.of(t);
@@ -67,8 +74,9 @@ public sealed interface Result<T, E> {
     };
   }
 
-  /// Evaluates the given results from left to right collecting the values
-  /// into a list. Returns the first error value encountered, if any.
+  /// O(n) - evaluates `xs` from left to right, collecting success values into a list.
+  ///
+  /// Returns the first error value encountered, if any.
   static <T, E> Result<VList<T>, E> sequence(VList<Result<T, E>> xs) {
     var result = new ArrayList<T>();
     for (var res : xs) {
@@ -82,8 +90,9 @@ public sealed interface Result<T, E> {
     return ok(VList.from(result));
   }
 
-  /// Applies `f` to each element in the list. Fails at the first error found, or returns the new
-  // list.
+  /// O(n + cost(f)) - applies `f` to each element in `xs`.
+  ///
+  /// Returns the first error produced by `f`, or the collected success values otherwise.
   static <T, S, E> Result<VList<S>, E> traverse(Iterable<T> xs, Function<T, Result<S, E>> f) {
     var result = new ArrayList<S>();
     for (T x : xs) {

@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+/// An optional value that is either [Some] or [None].
 public sealed interface Maybe<A> {
   static <T> Maybe<T> of(T value) {
     return (value == null) ? none() : new Some<>(value);
@@ -16,19 +17,24 @@ public sealed interface Maybe<A> {
     return (None<T>) None.Instance;
   }
 
+  /// O(1) - returns the wrapped value if present; otherwise returns `other`.
   default A getOrElse(A other) {
     return isEmpty() ? other : get();
   }
 
+  /// O(1) - returns the wrapped value if present; otherwise evaluates `supplier`.
   default A getOrElse(Supplier<A> supplier) {
     return isEmpty() ? supplier.get() : get();
   }
 
-  /// Returns the maybe's value if it is nonempty, or null if it is empty.
+  /// O(1) - returns the wrapped value if present; otherwise returns `null`.
   default A orNull() {
     return isEmpty() ? null : get();
   }
 
+  /// O(1) - returns the wrapped value.
+  ///
+  /// @throws UnsupportedOperationException if this is [None].
   default A get() {
     return switch (this) {
       case Some(var x) -> x;
@@ -48,6 +54,7 @@ public sealed interface Maybe<A> {
     return nonEmpty();
   }
 
+  /// O(1) - returns true only if this maybe wraps a value equal to `item`.
   default boolean contains(A item) {
     return switch (this) {
       case Some(var x) -> x.equals(item);
@@ -55,12 +62,12 @@ public sealed interface Maybe<A> {
     };
   }
 
-  /// Returns true only if this maybe is empty or contains a wrapped item that satisfies predicate
-  /// `p`; returns [Maybe.None] otherwise.
+  /// O(1) - returns true if this maybe is empty or if the wrapped value satisfies `p`.
   default boolean forall(Predicate<A> p) {
     return isEmpty() || p.test(this.get());
   }
 
+  /// O(1) - maps `f` over the wrapped value if present.
   default <B> Maybe<B> map(Function<A, B> f) {
     return switch (this) {
       case Maybe.None<?> _ -> none();
@@ -68,6 +75,7 @@ public sealed interface Maybe<A> {
     };
   }
 
+  /// O(1) - flatmaps `f` over the wrapped value if present.
   default <B> Maybe<B> flatMap(Function<A, Maybe<B>> f) {
     return switch (this) {
       case Maybe.None<?> _ -> Maybe.none();
@@ -75,8 +83,7 @@ public sealed interface Maybe<A> {
     };
   }
 
-  /// Returns true only if this maybe is nonempty *and* the provided predicate `p` holds when
-  /// applied to the contents within.
+  /// O(1) - returns true only if this maybe is nonempty and the wrapped value satisfies `p`.
   default boolean exists(Predicate<A> p) {
     return switch (this) {
       case Some(var x) -> p.test(x);
@@ -84,6 +91,7 @@ public sealed interface Maybe<A> {
     };
   }
 
+  /// O(1) - applies `f` to the wrapped value if present.
   default <U> void foreach(Function<A, U> f) {
     if (!isEmpty()) {
       f.apply(this.get());
