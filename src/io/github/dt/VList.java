@@ -23,6 +23,7 @@ public sealed interface VList<A> extends Iterable<A> {
   }
 
   record Cons<A>(A head, VList<A> rest) implements VList<A> {
+
     @Override
     public String toString() {
       return mkString("[", ", ", "]");

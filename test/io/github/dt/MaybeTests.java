@@ -99,7 +99,8 @@ public final class MaybeTests {
       acc.addAndGet(100);
       return null;
     });
-
+    // i.e.: foreach shouldn't execute on a none (so this doesn't end up being
+    // 105 or whatever)
     Assertions.assertEquals(5, acc.get());
   }
 }
