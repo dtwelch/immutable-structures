@@ -34,7 +34,7 @@ public sealed interface Maybe<A> {
 
   /// O(1) - returns the wrapped value.
   ///
-  /// @throws UnsupportedOperationException if this is [None].
+  /// @throws NoSuchElementException if this is [None].
   default A get() {
     return switch (this) {
       case Some(var x) -> x;
