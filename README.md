@@ -36,6 +36,9 @@ support the core collections.
 - The published Maven coordinates are currently `io.github.dtwelch:immutable-structures`.
 - `VHashMap` expects non-null keys (see doc/ for the original lean4 implementation).
 - most of the auxiliary (collection) types allow pattern matching as does `VList`
+- the `Validation` type is modeled after the scala3 version used in the frontend checking pipeline in the 
+[flix](https://github.com/flix/flix) compiler (which  I believe in turn was inspired by the haskell 
+library version)
 ## License
 
 BSD 3-Clause. See [LICENSE](LICENSE).
