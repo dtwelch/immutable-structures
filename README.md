@@ -5,6 +5,15 @@ Persistent immutable data structures for recent JDKs (25+).
 The current surface area is intentionally small: a list, a hash map, a hash set,
 and a few support types built around them.
 
+## maven dependency:
+```
+<dependency>
+    <groupId>io.github.dtwelch</groupId>
+    <artifactId>immutable-structures</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
 ## currently supported collections:
 
 - `VList`: singly linked persistent list
