@@ -10,7 +10,7 @@ and a few support types built around them.
 <dependency>
     <groupId>io.github.dtwelch</groupId>
     <artifactId>immutable-structures</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 ```
 

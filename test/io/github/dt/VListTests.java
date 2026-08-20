@@ -317,6 +317,11 @@ public final class VListTests {
   }
 
   @Test
+  public void emptyListToStringShouldIncludeBrackets() {
+    Assertions.assertEquals("[]", VList.empty().toString());
+  }
+
+  @Test
   public void mkStringCustomDelimiters() {
     var list = VList.of("a", "b", "c");
     var result = list.mkString("<", "|", ">");

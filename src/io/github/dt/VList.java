@@ -18,7 +18,7 @@ public sealed interface VList<A> extends Iterable<A> {
 
     @Override
     public String toString() {
-      return "";
+      return "[]";
     }
   }
 
